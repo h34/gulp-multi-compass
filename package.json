@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/h34/gulp-multi-compass/issues"
   },
-  "homepage": "https://github.com/h34/gulp-multi-compass#readme"
+  "homepage": "https://github.com/h34/gulp-multi-compass#readme",
+  "devDependencies": {
+    "node-fs-extra": "^0.8.1",
+    "path": "^0.11.14",
+    "through2": "^2.0.0",
+    "vinyl": "^0.5.0"
+  }
 }
