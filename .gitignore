@@ -1,1 +1,5 @@
 node_modules
+.temp
+dest
+.DS_Store
+.sass-cache

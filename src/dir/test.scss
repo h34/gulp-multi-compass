@@ -1,0 +1,14 @@
+a{
+  .b{
+    #c{
+      &.e{
+        &:after{
+          .f.g.h,i{
+            color: red;
+          }
+        }
+      }
+    }
+  }
+}
+/* Comment */
