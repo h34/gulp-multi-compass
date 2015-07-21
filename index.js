@@ -3,9 +3,7 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var fsx = require('node-fs-extra');
-var File = require('vinyl');
-var Stream = require('stream');
-
+var remove = require('remove');
 
 module.exports = function(){
 
@@ -56,6 +54,7 @@ module.exports = function(){
     compass.on('close', function(code){
       stream.write(fs.readFileSync(tempDest+'/'+destName)+'');
       stream.end();
+      remove.removeSync( temp );
     });
     this.push( file);
     callback();
