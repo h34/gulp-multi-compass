@@ -10,13 +10,16 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/h34/gulp-multi-compass.git"
+    "url": "git+https://github.com/higoshi/gulp-multi-compass.git"
   },
   "bugs": {
-    "url": "https://github.com/h34/gulp-multi-compass/issues"
+    "url": "https://github.com/higoshi/gulp-multi-compass/issues"
   },
-  "homepage": "https://github.com/h34/gulp-multi-compass#readme",
+  "homepage": "https://github.com/higoshi/gulp-multi-compass#readme",
   "devDependencies": {
+    "gulp": "^3.9.0"
+  },
+  "dependencies": {
     "node-fs-extra": "^0.8.1",
     "path": "^0.11.14",
     "through2": "^2.0.0",
