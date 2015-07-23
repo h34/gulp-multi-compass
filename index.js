@@ -7,7 +7,6 @@ var remove = require('remove');
 
 var glob = require('glob');
 
-
 // Options map for Compass
 var optionsNameMap = {
   'quit': '-q', // Quit mode
@@ -18,7 +17,7 @@ var optionsNameMap = {
   'app': '--app', // compass app
   'appDir': '--app-dir', // base dir app
   'sass': '--sass-dir', // sass dir
-  //'css': '--css-dir', // css dir
+  'css': '--css-dir', // css dir
   'image': '--images-dir', // img dir
   'javascript': '--javascript', // js dir
   'font': '--fonts-dir', // font dir
@@ -57,20 +56,21 @@ module.exports = function( compassOptions, userSettings){
 
     var request = queue.shift();
     var file = request.file;
-    var stream = request.stream;
+    console.log( file.path );
+    // var stream = request.stream;
 
 
     // make temporaries
-    var temp = '.temp/';
-    if( !fs.existsSync(temp) )fs.mkdirSync( temp );
-    temp = path.join( temp, String(numbering++));
-    var tempSrc = temp+'/src';
-    var tempDest = temp+'/dest';
-    var srcName = path.basename(file.path);
-    var destName = path.basename(file.path,'.scss')+'.css';
-    if( fs.existsSync(temp) ) remove.removeSync( temp );
-    fs.mkdirSync( temp );
-    fs.mkdirSync( tempDest );
+    // var temp = '.temp/';
+    // if( !fs.existsSync(temp) )fs.mkdirSync( temp );
+    // temp = path.join( temp, String(numbering++));
+    // var tempSrc = temp+'/src';
+    // var tempDest = temp+'/dest';
+    // var srcName = path.basename(file.path);
+    // var destName = path.basename(file.path,'.scss')+'.css';
+    // if( fs.existsSync(temp) ) remove.removeSync( temp );
+    // fs.mkdirSync( temp );
+    // fs.mkdirSync( tempDest );
 
 
     // for Compass args
@@ -81,27 +81,28 @@ module.exports = function( compassOptions, userSettings){
       var name = optionsNameMap[i] ? optionsNameMap[i] : i;
       compassArgs = compassArgs.concat( [ name, compassOptions[i] ] );
     }
+
+    console.log( compassArgs );
     // add Temp dirs
-    compassArgs = compassArgs.concat( ['--css-dir', tempDest] );
+    // compassArgs = compassArgs.concat( ['--css-dir', tempDest] );
+
+    // console.log( compassArgs );
 
     // setup stream
     // hoge.scss -> hoge.css
-    file.path = path.join(path.dirname(file.path),path.basename(file.path,'.scss')+'.css');
-
-
+    // file.path = path.join(path.dirname(file.path),path.basename(file.path,'.scss')+'.css');
 
     // compass child process option
     var processOption = {
-      cwd: __dirname  // current working directory
+      cwd: process.cwd()  // current working directory
     };
 
     // setup compass
-    var relative = path.relative( __dirname, file.path);
     var compass = spawn('compass', compassArgs, processOption );
 
     // Std Out
     compass.stdout.on('data', function(data){
-      console.log(data+"");
+      console.log(data+'');
     });
 
     // Std Error
@@ -111,10 +112,11 @@ module.exports = function( compassOptions, userSettings){
 
     // Process close
     compass.on('close', function(code){
-      var result = glob.sync( path.join(tempDest,'**/*.css') );
-      stream.write(fs.readFileSync(result[0])+'');
-      stream.end();
-      remove.removeSync( temp );  // remove temp directory
+      // stream.write(fs.readFileSync( file.path ));
+      // stream.end();
+      // remove.removeSync( temp );  // remove temp directory
+
+      console.log("close");
 
       processCount--;
       next();
@@ -128,14 +130,14 @@ module.exports = function( compassOptions, userSettings){
   this.transform = function(file, encode, callback ){
 
     // open this.push( file );
-    var stream = through();
-    file.contents = stream;
+    // var stream = through();
+    // file.contents = stream;
 
     // queue
-    queue.push( {file:file, stream:stream} );
+    queue.push( {file:file} );
     next();
 
-    this.push(file);
+    // this.push(file);
 
     // progress gulp task
     callback();
