@@ -18,7 +18,7 @@ var optionsNameMap = {
   'app': '--app', // compass app
   'appDir': '--app-dir', // base dir app
   'sass': '--sass-dir', // sass dir
-  'css': '--css-dir', // css dir
+  //'css': '--css-dir', // css dir
   'image': '--images-dir', // img dir
   'javascript': '--javascript', // js dir
   'font': '--fonts-dir', // font dir
