@@ -36,6 +36,16 @@ module.exports = function( compassOptions, userSettings){
     var processMax = settings.processMax;
     var processCount = processMax;  // alived process count
 
+    // init array filesTable
+    for(var i=0;i<processMax;i++){
+      filesTable.push([]);
+    }
+
+    // divide with process count
+    for(var i=0,len=files.length;i<len;i++){
+      filesTable[i%processMax].push(files[i]);
+    }
+
     // process end was call
     var end = function(){
       // all process end
@@ -45,15 +55,10 @@ module.exports = function( compassOptions, userSettings){
       }
     };
 
-    // divide with process count
-    for(var i=0,len=files.length;i<len;i++){
-      filesTable[i%processMax] = files[i];
-    }
-
     // create process and handling
     for(var i=0;i<processMax;i++){
       // process spawn
-      var proc = compass.compile( files, compassOptions );
+      var proc = compass.compile( filesTable[i], compassOptions );
       // std out
       proc.stdout.on('data', function(data){
         console.log(data+'');
