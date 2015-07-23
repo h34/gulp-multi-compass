@@ -4,10 +4,14 @@ var spawn = require('child_process').spawn;
 var fs = require('fs');
 var remove = require('remove');
 
-var glob = require('glob');
-
 // Options map for Compass
 var optionsNameMap = {
+  'noSourcemap': '--no-sourcemap', // off generate soucemap
+  'soucemap': '--sourcemap', // generate soucemap
+  'time': '--time', // show time
+  'debugInfo': '--debugInfo', // on debug info
+  'noDebugInfo': '--no-debug-info', // off debug info
+  'require': '-r',  // require library
   'quit': '-q', // Quit mode
   'trace': '--trace', // trace error
   'force': '--force', // force overwrite files
@@ -25,12 +29,19 @@ var optionsNameMap = {
   'asset': '--relative-assets',
   'noLineComments': '--no-line-comments',
   'http': '--http-path',  // http root
-  'generateImagePath': '--generate-image-path',
-  'help': '-h'
+  'generateImagePath': '--generate-image-path'
+  //,'help': '-h'
 }
 
 
 module.exports = function( compassOptions, userSettings){
+
+  // join command to Compass args
+  var optionCompassArgs = [];
+  for( var i in compassOptions ){
+    // if name on the map then use it
+    if( optionsNameMap[i] != null ) optionCompassArgs = optionCompassArgs.concat( [ optionsNameMap[i], compassOptions[i] ] );
+  }
 
   // default settings
   var settings = {
@@ -57,13 +68,9 @@ module.exports = function( compassOptions, userSettings){
     var file = request.file;
 
     // for Compass args
-    var compassArgs = ['compile', file.path];
-    // join command to Compass args
-    for( var i in compassOptions ){
-      // if name on the map then use it
-      var name = optionsNameMap[i] ? optionsNameMap[i] : i;
-      compassArgs = compassArgs.concat( [ name, compassOptions[i] ] );
-    }
+    var compassArgs = ['compile', file.path].concat(optionCompassArgs);
+    // console.log( compassArgs);
+
 
     // compass child process option
     var processOption = {
