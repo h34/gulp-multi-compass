@@ -1,117 +1,74 @@
 var through = require('through2');
 var path = require('path');
-var spawn = require('child_process').spawn;
-var fs = require('fs');
-var remove = require('remove');
 
-// Options map for Compass
-var optionsNameMap = {
-  'noSourcemap': '--no-sourcemap', // off generate soucemap
-  'soucemap': '--sourcemap', // generate soucemap
-  'time': '--time', // show time
-  'debugInfo': '--debugInfo', // on debug info
-  'noDebugInfo': '--no-debug-info', // off debug info
-  'require': '-r',  // require library
-  'quit': '-q', // Quit mode
-  'trace': '--trace', // trace error
-  'force': '--force', // force overwrite files
-  'boring': '--boring', // none color stdout
-  'config': '-c', // config file path
-  'app': '--app', // compass app
-  'appDir': '--app-dir', // base dir app
-  'sass': '--sass-dir', // sass dir
-  'css': '--css-dir', // css dir
-  'image': '--images-dir', // img dir
-  'javascript': '--javascript', // js dir
-  'font': '--fonts-dir', // font dir
-  'enviroment': '-e', // 'develop', 'production'
-  'style': '-s',  // css style: 'nested', 'expanded', 'compact', 'compressed'
-  'asset': '--relative-assets',
-  'noLineComments': '--no-line-comments',
-  'http': '--http-path',  // http root
-  'generateImagePath': '--generate-image-path'
-  //,'help': '-h'
-}
-
+var compass = require('./lib/compass');
 
 module.exports = function( compassOptions, userSettings){
-
-  // join command to Compass args
-  var optionCompassArgs = [];
-  for( var i in compassOptions ){
-    // if name on the map then use it
-    if( optionsNameMap[i] != null ) optionCompassArgs = optionCompassArgs.concat( [ optionsNameMap[i], compassOptions[i] ] );
-  }
 
   // default settings
   var settings = {
     processMax: 4  // of Numnber
   }
-  // override default settings
+  // override to settings
   if(userSettings!=null){
     for(var i in userSettings) settings[i] = userSettings[i];
   }
 
-  var numbering = 0;
-  var keepCallback = null;
-  var processCount = 0;
-
-  var queue = [];
-
-
-  this.next = function(){
-
-    if( queue.length <= 0 ) return;
-    if( processCount >= settings.processMax ) return;
-
-    var request = queue.shift();
-    var file = request.file;
-
-    // for Compass args
-    var compassArgs = ['compile', file.path].concat(optionCompassArgs);
-    // console.log( compassArgs);
-
-
-    // compass child process option
-    var processOption = {
-      cwd: process.cwd()  // current working directory
-    };
-
-    // setup compass
-    var compass = spawn('compass', compassArgs, processOption );
-
-    // Std Out
-    compass.stdout.on('data', function(data){
-      console.log(data+'');
-    });
-
-    // Std Error
-    compass.stderr.on('data',function(data){
-      console.log( 'error:'+data );
-    });
-
-    // Process close
-    compass.on('close', function(code){
-      processCount--;
-      next();
-    });
-
-    processCount++;
-    next();
-  }
+  // from gulp src files
+  var files = [];
 
   // gulp transform
   this.transform = function(file, encode, callback ){
-
-    // queue
-    queue.push( {file:file} );
-    next();
-
+    // add list file path
+    files.push( path.relative(process.cwd(), file.path) );
     // progress gulp task
     callback();
   };
 
-  this.flush = function(cb){
+
+  this.flush = function(callback){
+
+    var end = function(){
+      // callback();
+    }
+
+    var filesTable = [];  // divided files list
+    var processMax = settings.processMax;
+    var processCount = processMax;  // alived process count
+
+    // process end was call
+    var end = function(){
+      // all process end
+      if( (--processCount)<=0 ){
+        console.log("all proesss end")
+        callback();
+      }
+    };
+
+    // divide with process count
+    for(var i=0,len=files.length;i<len;i++){
+      filesTable[i%processMax] = files[i];
+    }
+
+    // create process and handling
+    for(var i=0;i<processMax;i++){
+      // process spawn
+      var proc = compass.compile( files, compassOptions );
+      // std out
+      proc.stdout.on('data', function(data){
+        console.log(data+'');
+      })
+      // std error
+      proc.stderr.on('data',function(data){
+        console.log(data+'');
+      });
+      // process close
+      proc.on('close',function(){
+        console.log('process closed');
+        end();
+      });
+    }
+
   };
 
   return through.obj( this.transform, this.flush );
