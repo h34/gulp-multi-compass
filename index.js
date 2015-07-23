@@ -5,6 +5,7 @@ var fs = require('fs');
 var fsx = require('node-fs-extra');
 var remove = require('remove');
 
+var glob = require('glob');
 
 
 // Options map for Compass
@@ -16,8 +17,8 @@ var optionsNameMap = {
   'config': '-c', // config file path
   'app': '--app', // compass app
   'appDir': '--app-dir', // base dir app
-  // 'sass': '--sass-dir', // sass dir
-  // 'css': '--css-dir', // css dir
+  'sass': '--sass-dir', // sass dir
+  'css': '--css-dir', // css dir
   'image': '--images-dir', // img dir
   'javascript': '--javascript', // js dir
   'font': '--fonts-dir', // font dir
@@ -31,28 +32,18 @@ var optionsNameMap = {
 }
 
 
-module.exports = function( userSettings, compassOptions){
+module.exports = function( compassOptions, userSettings){
 
   // default settings
   var settings = {
-    processMax: 16  // of Numnber
+    processMax: 1  // of Numnber
   }
   // override default settings
   if(userSettings!=null){
     for(var i in userSettings) settings[i] = userSettings[i];
   }
 
-  // for Compass args
-  var compassArgs = ['compile'];
-  // join command to Compass args
-  compassOptions = compassOptions | {};
-  for( var i in compassOptions ){
-    // if name on the map then use it
-    var name = optionsNameMap[i] ? optionsNameMap[i] : i;
-    compassArgs = compassArgs.concat( [ name, compassOptions[i] ] );
-  }
-
-
+  var numbering = 0;
   var keepCallback = null;
   var processCount = 0;
 
@@ -69,42 +60,44 @@ module.exports = function( userSettings, compassOptions){
     var stream = request.stream;
 
 
-
     // make temporaries
     var temp = '.temp/';
     if( !fs.existsSync(temp) )fs.mkdirSync( temp );
-    while( temp.length<24 ){
-      // generate random dir name
-      temp += Math.floor(Math.random()*32).toString(32);
-    }
+    temp = path.join( temp, String(numbering++));
     var tempSrc = temp+'/src';
     var tempDest = temp+'/dest';
     var srcName = path.basename(file.path);
     var destName = path.basename(file.path,'.scss')+'.css';
+    if( fs.existsSync(temp) ) remove.removeSync( temp );
     fs.mkdirSync( temp );
-    fs.mkdirSync( tempSrc );
     fs.mkdirSync( tempDest );
-    fsx.copySync( file.path, tempSrc+'/'+srcName);
 
+
+    // for Compass args
+    var compassArgs = ['compile', file.path];
+    // join command to Compass args
+    for( var i in compassOptions ){
+      // if name on the map then use it
+      var name = optionsNameMap[i] ? optionsNameMap[i] : i;
+      compassArgs = compassArgs.concat( [ name, compassOptions[i] ] );
+    }
+    // add Temp dirs
+    compassArgs = compassArgs.concat( ['--css-dir', tempDest] );
 
     // setup stream
     // hoge.scss -> hoge.css
     file.path = path.join(path.dirname(file.path),path.basename(file.path,'.scss')+'.css');
 
 
-    // add Temp dirs
-    compassArgs = compassArgs.concat( ['--sass-dir', tempSrc, '--css-dir', tempDest] );
-
-
 
     // compass child process option
-    var compassOptions = {
+    var processOption = {
       cwd: __dirname  // current working directory
     };
 
     // setup compass
     var relative = path.relative( __dirname, file.path);
-    var compass = spawn('compass', compassArgs, compassOptions );
+    var compass = spawn('compass', compassArgs, processOption );
 
     // Std Out
     compass.stdout.on('data', function(data){
@@ -118,7 +111,8 @@ module.exports = function( userSettings, compassOptions){
 
     // Process close
     compass.on('close', function(code){
-      stream.write(fs.readFileSync(tempDest+'/'+destName)+'');
+      var result = glob.sync( path.join(tempDest,'**/*.css') );
+      stream.write(fs.readFileSync(result[0])+'');
       stream.end();
       remove.removeSync( temp );  // remove temp directory
 
