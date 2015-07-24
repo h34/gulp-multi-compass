@@ -4,6 +4,14 @@ var multiCompass = require('./index');
 
 gulp.task('compile',function(){
   gulp.src('./src/**/*.scss')
-    .pipe(multiCompass({sass:'src', css:'dest'}))
+    .pipe(multiCompass(
+      {
+        sass:'src'
+        ,css:'dest'
+        ,time:true
+        ,trace:true
+        ,force:true
+      }
+    ))
     //.pipe( gulp.dest('dest') );
 })

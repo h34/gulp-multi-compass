@@ -28,29 +28,32 @@ module.exports = function( compassOptions, userSettings){
 
   this.flush = function(callback){
 
-    var end = function(){
-      // callback();
-    }
-
     var filesTable = [];  // divided files list
-    var processMax = settings.processMax;
+    var processMax = Math.min( files.length, settings.processMax );
     var processCount = processMax;  // alived process count
 
-    // init array filesTable
+    console.log( 'Compile '+files.length+' files in '+processMax+' process' );
+
+    // files divide to filesTable
+    var freeProcess,hadFiles;
     for(var i=0;i<processMax;i++){
-      filesTable.push([]);
+      freeProcess = processMax-i;
+      hadFiles = Math.round(files.length/freeProcess);
+      filesTable.push( files.splice(0,hadFiles) );
     }
 
     // divide with process count
+    /*
     for(var i=0,len=files.length;i<len;i++){
       filesTable[i%processMax].push(files[i]);
     }
+    */
+
 
     // process end was call
     var end = function(){
       // all process end
       if( (--processCount)<=0 ){
-        console.log("all proesss end")
         callback();
       }
     };
@@ -65,11 +68,10 @@ module.exports = function( compassOptions, userSettings){
       })
       // std error
       proc.stderr.on('data',function(data){
-        console.log(data+'');
+        console.error(data+'');
       });
       // process close
       proc.on('close',function(){
-        console.log('process closed');
         end();
       });
     }
