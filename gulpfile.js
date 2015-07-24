@@ -10,7 +10,6 @@ gulp.task('compile',function(){
         ,css:'dest'
         ,time:true
         ,trace:true
-        ,force:true
       }
     ))
     //.pipe( gulp.dest('dest') );
