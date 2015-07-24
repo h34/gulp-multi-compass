@@ -3,15 +3,15 @@ var path = require('path');
 
 var compass = require('./lib/compass');
 
-module.exports = function( options ){
+module.exports = function( compassOptions, userSettings){
 
   // default settings
   var settings = {
     processMax: 4  // of Numnber
   }
   // override to settings
-  if(options!=null){
-    for(var i in options) settings[i] = options[i];
+  if(userSettings!=null){
+    for(var i in userSettings) settings[i] = userSettings[i];
   }
 
   // from gulp src files
@@ -61,7 +61,7 @@ module.exports = function( options ){
     // create process and handling
     for(var i=0;i<processMax;i++){
       // process spawn
-      var proc = compass.compile( filesTable[i], options );
+      var proc = compass.compile( filesTable[i], compassOptions );
       // std out
       proc.stdout.on('data', function(data){
         console.log(data+'');
